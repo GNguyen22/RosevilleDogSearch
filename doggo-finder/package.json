@@ -1,0 +1,21 @@
+{
+  "name": "doggo-finder",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "core-js": "^3.0.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-native-hyperlink": "0.0.14",
+    "react-scripts": "0.9.5",
+    "typeface-roboto": "0.0.54"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "proxy": "http://localhost:3001"
+}
