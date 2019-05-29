@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import json
+import datetime
+from dateutil.parser import parse
 
 def main():
     dog_entry = []
@@ -9,7 +11,14 @@ def main():
     placerAuburn(dog_entry)
     sacSPCA(dog_entry)
     sacShelter(dog_entry)
+    #yoloSPCA(dog_entry) #foster based organization + application
     print json.dumps(dog_entry)
+
+def handleDate(unformatted_date):
+    dt = parse(unformatted_date)
+    date = "{:%Y-%m-%d}".format(dt)
+    #print date
+    return date
 
 def placerSpca(dog_entry):
     placer_dogs = 'http://placerspca.org/adopt-home/dogs/#RosevilleDogs'
@@ -29,10 +38,11 @@ def placerSpca(dog_entry):
     dog_td = dog_soup.findAll('td', attrs = {'class': 'list-item'})
 
     for dog_block in dog_td:
-        # image
-        dog_image = dog_block.find('img', attrs = {'class': 'list-animal-photo'})
-        if dog_image is None:
-            continue
+        dog_specific_url = "http://ws.petango.com/webservices/adoptablesearch/" + (dog_block.find('a')).get('href')
+        dog_specific_page = requests.get(dog_specific_url)
+        dog_specific_soup = BeautifulSoup(dog_specific_page.text, 'html.parser')
+        #print dog_specific_url
+        dog_image = dog_specific_soup.find('img', attrs = {'id': 'imgAnimalPhoto'})
         dog_image = dog_image.attrs['src']
         dog_image = dog_image.strip('//')
         #print dog_image
@@ -52,8 +62,11 @@ def placerSpca(dog_entry):
             #print info
             table_log[info_type] = info
             #print table_log
-        table_log["intake"] = "-"
-        table_log["dogLink"] = placer_dogs
+        dog_intake = (dog_specific_soup.find('span', {'id' : 'lblIntakeDate'})).text
+        dog_intake = handleDate(dog_intake)
+        table_log["intake"] = dog_intake
+        table_log["dogLink"] = dog_specific_url
+        table_log["shelter"] = "Roseville Placer SPCA"
         dog_entry.append(table_log)
 
 def placerAuburn(dog_entry):
@@ -83,6 +96,10 @@ def placerAuburn(dog_entry):
         item_soup = BeautifulSoup(item_page.text, 'html.parser')
         item_block = item_soup.find('table', attrs = {'class': 'DetailTable'})
         #print item_block
+        unform_date = (item_block.find('td', attrs = {'class' : 'DetailDesc'})).text
+        unform_date = re.findall(r"\w+\s\d{1,2},\s\d{4}",unform_date)
+        #print unform_date[0]
+        dog_intake = handleDate(unform_date[0])
         item_img = "petharbor.com/" + (item_block.find('img')).attrs['src']
         #print item_img
         table_log = {'doggo': item_img}
@@ -100,9 +117,10 @@ def placerAuburn(dog_entry):
         table_log["breed"] = dog_breed
         dog_age = dog_text[3].get_text()
         table_log["age"] = dog_age
-        dog_intake = (dog_text[-1].get_text())[3:]
+        #dog_intake = (dog_text[-1].get_text())[3:]
         table_log["intake"] = dog_intake
         table_log["dogLink"] = dog_item
+        table_log["shelter"] = "Auburn Placer"
         dog_entry.append(table_log)
 
 def sacSPCA(dog_entry):
@@ -145,8 +163,10 @@ def sacSPCA(dog_entry):
         #print dog_age
         table_log["age"] = dog_age
         dog_intake = (dog_block.find('span', attrs = {'id' : 'lblIntakeDate'})).text
+        dog_intake = handleDate(dog_intake)
         table_log["intake"] = dog_intake
         table_log["dogLink"] = dog_url
+        table_log["shelter"] = "Sacramento SPCA"
         #print dog_intake
         dog_entry.append(table_log)
 
@@ -172,8 +192,52 @@ def sacShelter(dog_entry):
         table_log = {'doggo': dog_img}
         dog_name = (dog_table.find('font', {'class' : 'Title'})).text
         #print dog_name
+        dog_info = (dog_table.find('td', attrs = {'class' : 'DetailDesc'})).text
+        #print dog_info
+        dog_intake = handleDate((re.findall(r"\w+\s\d{1,2},\s\d{4}",dog_info))[0])
+        #print intake_date
         table_log["name"] = dog_name
+        table_log["intake"] = dog_intake
         table_log["dogLink"] = dog_link
+        table_log["shelter"] = "Sacramento Front Street Animal Shelter"
+        dog_entry.append(table_log)
+
+def yoloSPCA(dog_entry):
+    yoloSPCA = "http://yolospca.org/adopt/view-adoptable-animals"
+
+    page = requests.get(yoloSPCA)
+    soup = BeautifulSoup(page.text, 'html.parser')
+
+    iframe = soup.find('iframe')
+    iframe_src = iframe.attrs["src"] + "Dog"
+    #print iframe_src
+
+    dog_page = requests.get(iframe_src)
+    dog_soup = BeautifulSoup(dog_page.text, 'html.parser')
+
+    dog_frames = dog_soup.findAll('td', attrs = {'class': 'searchResultsCell'})
+
+    for dog_frame in dog_frames:
+        dog_url = "https://toolkit.rescuegroups.org/iframe/fb/v1.0/" + (dog_frame.find('a')).get('href')
+        #print dog_url
+        dog_block = requests.get(dog_url)
+        dog_info = BeautifulSoup(dog_block.text, 'html.parser')
+        dog_img = dog_info.find('div', {'class' : 'rgPetDetailsLargePhoto'})
+        dog_img = (dog_img.find('img')).attrs['src']
+        #print dog_img
+        table_log = {'doggo': dog_img[8:]}
+        dog_name = (dog_info.find('div', {'class' : 'pageCenterTitle'})).text
+        #print dog_name
+        table_log["name"] = dog_name
+        dog_breed = (dog_info.find('span', {'id' : 'rgPetDetailsBreed'})).text
+        #print dog_breed
+        table_log["breed"] = dog_breed
+        dog_gender = (dog_info.find('span', {'id' : 'rgPetDetailsSex'})).text
+        table_log["sexSN"] = (dog_gender[4:])
+        dog_age = (dog_info.find('span', {'id' : 'rgPetDetailsAge'})).text
+        table_log["age"] = (dog_age[4:])
+        table_log["dogLink"] = dog_url
+        table_log["shelter"] = "Yolo County SPCA"
         dog_entry.append(table_log)
 
 main()

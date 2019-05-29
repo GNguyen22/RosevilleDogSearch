@@ -84,13 +84,14 @@ class Demo extends Component {
          <TableCell align="right">Sex</TableCell>
          <TableCell align="right">Intake Date</TableCell>
          <TableCell align="right">Dog Link</TableCell>
+         <TableCell align="right">Shelter</TableCell>
          </TableRow>
          </TableHead>
          <TableBody>
          {rows.map(row => (
             <TableRow key={row.id}>
             <TableCell component="th" scope="row">
-            <img src={'http://' + row.doggo} />
+            <img src={'http://' + row.doggo} height="300"/>
             </TableCell>
             <TableCell align="right">{row.name}</TableCell>
             <TableCell align="right">{row.breed}</TableCell>
@@ -100,6 +101,7 @@ class Demo extends Component {
             <TableCell align="right">
                <Text style={styles.TextStyle} onPress={ ()=> Linking.openURL(row.dogLink) } > Dog Page Link </Text>
             </TableCell>
+            <TableCell align="right">{row.shelter}</TableCell>
             </TableRow>
          ))}
          </TableBody>

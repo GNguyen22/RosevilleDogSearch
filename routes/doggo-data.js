@@ -5,7 +5,7 @@ let {PythonShell} = require('python-shell')
 
 //database variables
 var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database('DogsForAdoption.db')
+var db = new sqlite3.Database('DogsForAdoption')
 
 
 router.get('/', function(req, res, next) {
@@ -16,7 +16,7 @@ module.exports = router;
 
 function getDoggoData(res) {
    //db.serialize(function () {
-      db.all("SELECT * FROM DogInfo", function(err, allRows) {
+      db.all("SELECT * FROM DogInfo ORDER BY date(intake) DESC", function(err, allRows) {
          //console.log(allRows)
          if(err != null) {
             console.log(err);
@@ -50,7 +50,7 @@ function storeDoggoData(results) {
    //database code
    db.serialize(function () {
       db.run('DROP TABLE if exists DogInfo');
-      db.run('CREATE TABLE DogInfo (doggo TEXT, name TEXT, sexSN TEXT, breed TEXT, age TEXT, intake TEXT, id TEXT, species TEXT, dogLink TEXT)');
+      db.run('CREATE TABLE DogInfo (doggo TEXT, name TEXT, sexSN TEXT, breed TEXT, age TEXT, intake TEXT, id TEXT, species TEXT, dogLink TEXT, shelter TEXT)');
       //var stmt = db.prepare('INSERT INTO DogInfo (img, name, sexSN, breed, age, intake) VALUES (?, ?, ?, ?, ?, ?)');
 
       for (var i = 0; i < results.length; i++) {
