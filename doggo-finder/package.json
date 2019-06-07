@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/icons": "^4.0.1",
     "core-js": "^3.0.1",
+    "material-table": "^1.38.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-native-hyperlink": "0.0.14",

@@ -1,18 +1,48 @@
 import React, { Component } from 'react';
+import {Text, Linking } from 'react-native';
+import {withStyles} from '@material-ui/core/styles';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
-import { StyleSheet, Text, View, Linking } from 'react-native';
+import MaterialTable from 'material-table';
+import AddBox from '@material-ui/icons/AddBox';
+import ArrowUpward from '@material-ui/icons/ArrowUpward';
+import Check from '@material-ui/icons/Check';
+import ChevronLeft from '@material-ui/icons/ChevronLeft';
+import ChevronRight from '@material-ui/icons/ChevronRight';
+import Clear from '@material-ui/icons/Clear';
+import DeleteOutline from '@material-ui/icons/DeleteOutline';
+import Edit from '@material-ui/icons/Edit';
+import FilterList from '@material-ui/icons/FilterList';
+import FirstPage from '@material-ui/icons/FirstPage';
+import LastPage from '@material-ui/icons/LastPage';
+import Remove from '@material-ui/icons/Remove';
+import SaveAlt from '@material-ui/icons/SaveAlt';
+import Search from '@material-ui/icons/Search';
+import ViewColumn from '@material-ui/icons/ViewColumn';
+
+const tableIcons = {
+  Add: AddBox,
+  Check: Check,
+  Clear: Clear,
+  Delete: DeleteOutline,
+  DetailPanel: ChevronRight,
+  Edit: Edit,
+  Export: SaveAlt,
+  Filter: FilterList,
+  FirstPage: FirstPage,
+  LastPage: LastPage,
+  NextPage: ChevronRight,
+  PreviousPage: ChevronLeft,
+  ResetSearch: Clear,
+  Search: Search,
+  SortArrow: ArrowUpward,
+  ThirdStateCheck: Remove,
+  ViewColumn: ViewColumn
+};
 
 const styles = theme => ({
    root: {
       width: '100%',
-      marginTop: theme.spacing.unit * 3,
+      marginTop: theme.spacing(3),
       overflowX: 'auto',
    },
    table: {
@@ -20,16 +50,7 @@ const styles = theme => ({
    },
 });
 
-let id = 0;
-function createData(dog_picture, name, breed, intake_date) {
-   id += 1;
-   return { id, dog_picture, name, breed, intake_date};
-}
-
-
-const rows = [
-];
-
+var rows = [];
 
 class Demo extends Component {
    componentDidMount() {
@@ -42,7 +63,6 @@ class Demo extends Component {
             } else {
                throw new Error('Something went wrong...');
             }
-            console.log('here');
          })
          .then(data => {
             console.log(data)
@@ -54,6 +74,8 @@ class Demo extends Component {
    }
 
    render() {
+      const { classes } = this.props;
+
       if (this.state) {
          if (this.state.isLoading) {
             return null;
@@ -61,87 +83,70 @@ class Demo extends Component {
       } else {
          return null;
       }
-      console.log("state")
-      console.log(this.state)
-      console.log("doggos")
-      console.log(this.state.doggos)
+      //console.log("state")
+      //console.log(this.state)
+      //console.log("doggos")
+      //console.log(this.state.doggos)
       //console.log("json doggos")
       //console.log(JSON.parse(this.state.doggos))
 
       //rows = JSON.parse(this.state.doggos)
       rows = this.state.doggos
-
-      const { classes } = this.props;
+      var borderCss = '1.5px solid gray'
+      //rows = this.state;
       return (
-         <Paper className={classes.root}>
-         <Table className={classes.table}>
-         <TableHead>
-         <TableRow>
-         <TableCell>Doggo</TableCell>
-         <TableCell align="right">Name</TableCell>
-         <TableCell align="right">Breed</TableCell>
-         <TableCell align="right">Age</TableCell>
-         <TableCell align="right">Sex</TableCell>
-         <TableCell align="right">Intake Date</TableCell>
-         <TableCell align="right">Dog Link</TableCell>
-         <TableCell align="right">Shelter</TableCell>
-         </TableRow>
-         </TableHead>
-         <TableBody>
-         {rows.map(row => (
-            <TableRow key={row.id}>
-            <TableCell component="th" scope="row">
-            <img src={'http://' + row.doggo} height="300"/>
-            </TableCell>
-            <TableCell align="right">{row.name}</TableCell>
-            <TableCell align="right">{row.breed}</TableCell>
-            <TableCell align="right">{row.age}</TableCell>
-            <TableCell align="right">{row.sexSN}</TableCell>
-            <TableCell align="right">{row.intake}</TableCell>
-            <TableCell align="right">
-               <Text style={styles.TextStyle} onPress={ ()=> Linking.openURL(row.dogLink) } > Dog Page Link </Text>
-            </TableCell>
-            <TableCell align="right">{row.shelter}</TableCell>
-            </TableRow>
-         ))}
-         </TableBody>
-         </Table>
-         </Paper>
+         //<div style={{ maxWidth: "100%" }}>
+         <MaterialTable
+         columns={[
+            { title: "Dog", field: "doggo", sorting: false,
+              render: rowData => <img src={'http://' + rowData.doggo} height="300" alt=""/>,
+              cellStyle: {borderRight: borderCss, borderTop: borderCss, borderBottom: borderCss},
+            },
+            { title: "Name", field: "name", cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss} },
+            { title: "Breed", field: "breed", cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss}},
+            { title: "Age", field: "age",
+               customSort: (a, b) => {
+                  var regex = /^\d+/;
+                  var aAge = regex.exec(a.age);
+                  //console.log(a.age);
+                  //console.log(aAge);
+                  var bAge = regex.exec(b.age);
+                  //console.log(b.age);
+                  //console.log(bAge);
+                  return aAge - bAge;
+               }, cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss}
+            },
+            { title: "Sex", field: "sexSN", cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss}},
+            { title: "Intake Date", field: "intake", cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss, width: 75}
+            },
+            { title: "Dog Link", field: "dogLink", sorting: false,
+              render: rowData => <Text style={styles.TextStyle} onPress={ ()=> Linking.openURL(rowData.dogLink) } > Dog Page Link </Text>,
+               cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss},
+            },
+            { title: "Shelter", field: "shelter", cellStyle: {borderLeft: borderCss, borderTop: borderCss, borderBottom: borderCss}}
+         ]}
+         data={rows}
+         option={{
+            sorting: true
+         }}
+         options={{
+            headerStyle: {
+               backgroundColor: '#01579b',
+               color: '#FFF'
+            }
+         }}
+         icons={tableIcons}
+         title="Roseville Dog Adoption Search"
+         style={{ width: '95%', marginLeft: '2.5%'}}
+         className={classes.root}
+         />
+         //</div>
       );
    }
 }
 
-
-function SimpleTable(props) {
-   const { classes } = props;
-
-   return (
-      <Paper className={classes.root}>
-      <Table className={classes.table}>
-      <TableHead>
-      <TableRow>
-      <TableCell>Doggo</TableCell>
-      <TableCell align="right">Name</TableCell>
-      <TableCell align="right">Breed</TableCell>
-      <TableCell align="right">Intake Date</TableCell>
-      </TableRow>
-      </TableHead>
-      <TableBody>
-      {rows.map(row => (
-         <TableRow key={row.id}>
-         <TableCell component="th" scope="row">
-         {row.dog_picture}
-         </TableCell>
-         <TableCell align="right">{row.name}</TableCell>
-         <TableCell align="right">{row.breed}</TableCell>
-         <TableCell align="right">{row.intake}</TableCell>
-         </TableRow>
-      ))}
-      </TableBody>
-      </Table>
-      </Paper>
-   );
-}
+Demo.propTypes = {
+  classes: PropTypes.object.isRequired,
+};
 
 export default withStyles(styles)(Demo);
-

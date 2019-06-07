@@ -12,6 +12,7 @@ def main():
     sacSPCA(dog_entry)
     sacShelter(dog_entry)
     #yoloSPCA(dog_entry) #foster based organization + application
+    sacBradshawShelter(dog_entry)
     print json.dumps(dog_entry)
 
 def handleDate(unformatted_date):
@@ -38,10 +39,12 @@ def placerSpca(dog_entry):
     dog_td = dog_soup.findAll('td', attrs = {'class': 'list-item'})
 
     for dog_block in dog_td:
+        #print dog_block
+        if (dog_block.find('a')) is None:
+            continue
         dog_specific_url = "http://ws.petango.com/webservices/adoptablesearch/" + (dog_block.find('a')).get('href')
         dog_specific_page = requests.get(dog_specific_url)
         dog_specific_soup = BeautifulSoup(dog_specific_page.text, 'html.parser')
-        #print dog_specific_url
         dog_image = dog_specific_soup.find('img', attrs = {'id': 'imgAnimalPhoto'})
         dog_image = dog_image.attrs['src']
         dog_image = dog_image.strip('//')
@@ -90,38 +93,40 @@ def placerAuburn(dog_entry):
     for dog_block in dog_frames:
         dog_item = dog_block.find('a')
         dog_item = dog_item.get('href')
-        #print dog_item
         dog_item = "https://petharbor.com/" + dog_item
+        #print dog_item
         item_page = requests.get(dog_item)
         item_soup = BeautifulSoup(item_page.text, 'html.parser')
         item_block = item_soup.find('table', attrs = {'class': 'DetailTable'})
-        #print item_block
+        #print item_block.text
         unform_date = (item_block.find('td', attrs = {'class' : 'DetailDesc'})).text
         unform_date = re.findall(r"\w+\s\d{1,2},\s\d{4}",unform_date)
         #print unform_date[0]
-        dog_intake = handleDate(unform_date[0])
-        item_img = "petharbor.com/" + (item_block.find('img')).attrs['src']
-        #print item_img
-        table_log = {'doggo': item_img}
-
-        dog_text = dog_block.findAll('div', attrs = {'class': 'gridText'})
-        #print dog_text
-        #for text in dog_text:
-            #print(text.get_text())
-        dog_name = dog_text[0].get_text()
-        table_log["name"] = dog_name
-        #print dog_name
-        dog_sex = dog_text[1].get_text()
-        table_log["sexSN"] = dog_sex
-        dog_breed = dog_text[2].get_text()
-        table_log["breed"] = dog_breed
-        dog_age = dog_text[3].get_text()
-        table_log["age"] = dog_age
-        #dog_intake = (dog_text[-1].get_text())[3:]
-        table_log["intake"] = dog_intake
-        table_log["dogLink"] = dog_item
-        table_log["shelter"] = "Auburn Placer"
-        dog_entry.append(table_log)
+        if re.findall("I have been adopted", item_block.text):
+            pass
+        else:
+            item_img = "petharbor.com/" + (item_block.find('img')).attrs['src']
+            #print item_img
+            table_log = {'doggo': item_img}
+            dog_text = dog_block.findAll('div', attrs = {'class': 'gridText'})
+            #print dog_text
+            #for text in dog_text:
+                #print(text.get_text())
+            dog_name = dog_text[0].get_text()
+            table_log["name"] = dog_name
+            #print dog_name
+            dog_sex = dog_text[1].get_text()
+            table_log["sexSN"] = dog_sex
+            dog_breed = dog_text[2].get_text()
+            table_log["breed"] = dog_breed
+            dog_age = dog_text[3].get_text()
+            table_log["age"] = dog_age
+            #dog_intake = (dog_text[-1].get_text())[3:]
+            dog_intake = handleDate(unform_date[0])
+            table_log["intake"] = dog_intake
+            table_log["dogLink"] = dog_item
+            table_log["shelter"] = "Auburn Placer"
+            dog_entry.append(table_log)
 
 def sacSPCA(dog_entry):
 
@@ -192,11 +197,23 @@ def sacShelter(dog_entry):
         table_log = {'doggo': dog_img}
         dog_name = (dog_table.find('font', {'class' : 'Title'})).text
         #print dog_name
+        table_log["name"] = dog_name
         dog_info = (dog_table.find('td', attrs = {'class' : 'DetailDesc'})).text
         #print dog_info
+        dog_breed = (re.findall(r"(?:male)\S*\s*(.+?)\.", dog_info))[0]
+        #print dog_breed
+        table_log["breed"] = dog_breed
+        dog_gender = (re.findall(r'(?:fe)?male', dog_info))[0]
+        #print dog_gender
+        table_log["sexSN"] = dog_gender
+        try:
+            dog_age = re.findall(r"about\s(\d{1,2}\syears?(?: and \d{1,2} months)?)\sold", dog_info)[0].replace('and ', '')
+        except:
+            dog_age = 'Unknown'
+        table_log["age"] = dog_age
+        #print table_log['age']
         dog_intake = handleDate((re.findall(r"\w+\s\d{1,2},\s\d{4}",dog_info))[0])
         #print intake_date
-        table_log["name"] = dog_name
         table_log["intake"] = dog_intake
         table_log["dogLink"] = dog_link
         table_log["shelter"] = "Sacramento Front Street Animal Shelter"
@@ -239,5 +256,60 @@ def yoloSPCA(dog_entry):
         table_log["dogLink"] = dog_url
         table_log["shelter"] = "Yolo County SPCA"
         dog_entry.append(table_log)
+
+def sacBradshawShelter(dog_entry):
+    bradshawShelter = "http://www.acr.saccounty.net/Adoption/Pages/ViewAllAdoptableAnimals.aspx"
+
+    page = requests.get(bradshawShelter)
+    soup = BeautifulSoup(page.text, 'html.parser')
+
+    dogUrl = (soup.find('a', text="View list of Adoptable Dogs")).get('href')
+    dogUrl = dogUrl.replace("rows=10", "rows=100")
+    #print dogUrl
+
+    dog_req = requests.get(dogUrl)
+    dog_soup = BeautifulSoup(dog_req.text, 'html.parser')
+
+    dog_entries = dog_soup.findAll('tr', attrs = {'align' : 'CENTER'})
+
+    for dog_item in dog_entries[1:]:
+        #print dog_item.text
+        if (re.findall("I am adopted", dog_item.text)):
+            pass #print "skip"
+        else:
+            dog_specific_url = 'https://petharbor.com/' + (dog_item.find('a', attrs = {'alt' : 'Click on this picture to see more information about this animal'})).get('href')
+            #print dog_specific_url
+            dog_spec_page = requests.get(dog_specific_url)
+            dog_spec_soup = BeautifulSoup(dog_spec_page.text, 'html.parser')
+
+            dog_img = dog_spec_soup.find('td', attrs = {'align' : 'center'})
+            dog_img = 'petharbor.com/' + (dog_img.find('img')).attrs['src']
+            #print dog_img
+            table_log = {'doggo': dog_img}
+            #print "didn't skip"
+            dog_name = (dog_spec_soup.find('font', {'class' : 'Title'})).text
+            #print dog_name
+            table_log["name"] = dog_name
+            dog_info = (dog_spec_soup.find('td', attrs = {'class' : 'DetailDesc'})).text
+            #print dog_info
+            dog_breed = (re.findall(r"(?:male)\S*\s*(.+?)\.", dog_info))[0]
+            #print dog_breed
+            table_log["breed"] = dog_breed
+            dog_gender = (re.findall(r'(?:fe)?male', dog_info))[0]
+            #print dog_gender
+            table_log["sexSN"] = dog_gender
+            try:
+                dog_age = re.findall(r"about\s(\d{1,2}\syears?(?: and \d{1,2} months)?)\sold", dog_info)[0].replace('and ', '')
+            except:
+                dog_age = 'Unknown'
+            table_log["age"] = dog_age
+            #print table_log['age']
+            #dog_intake = handleDate((re.findall(r"\w+\s\d{1,2},\s\d{4}",dog_info))[0])
+            dog_intake = (dog_item.text)[-10:]
+            table_log["intake"] = dog_intake
+            table_log["dogLink"] = dog_specific_url
+            table_log["shelter"] = "Sacramento Bradshaw Shelter"
+            dog_entry.append(table_log)
+
 
 main()

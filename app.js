@@ -42,4 +42,10 @@ app.use(function(err, req, res, next) {
 
 module.exports = app;
 
+function callEveryHour() {
+   //console.log("in loop");
+   setInterval((doggoDataRouter.scrapeDoggoData), 1000*60*60);
+}
+
 doggoDataRouter.scrapeDoggoData();
+callEveryHour();

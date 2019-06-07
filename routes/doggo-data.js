@@ -31,12 +31,13 @@ function getDoggoData(res) {
 
 function scrapeDoggoData() {
    //res.send('respond with a resource');
+   console.log("starting script");
    let options = {
       pythonPath: 'python2'
    }
    PythonShell.run('placerDogs.py', options, function (err, results) {
       if (err) throw err;
-      console.log('results: %j', results);
+      //console.log('results: %j', results);
       storeDoggoData(JSON.parse(results));
       console.log('done');
    });
