@@ -4,16 +4,48 @@ import re
 import json
 import datetime
 from dateutil.parser import parse
+import logging
 
 def main():
     dog_entry = []
-    placerSpca(dog_entry)
-    placerAuburn(dog_entry)
-    sacSPCA(dog_entry)
-    sacShelter(dog_entry)
+    logging.basicConfig(
+            format='%(asctime)s %(levelname)-8s %(message)s',
+            filename='logs/placerDogs.log',
+            level=logging.ERROR,
+            datefmt='%Y-%m-%d %H:%M:%S')
+    try:
+        placerSpca(dog_entry)
+    except:
+        logging.exception('')
+        pass
+    try:
+        placerAuburn(dog_entry)
+    except:
+        logging.exception('')
+        pass
+    try:
+        sacSPCA(dog_entry)
+    except:
+        logging.exception('')
+        pass
+    try:
+        sacShelter(dog_entry)
+    except:
+        logging.exception('')
+        pass
     #yoloSPCA(dog_entry) #foster based organization + application
-    sacBradshawShelter(dog_entry)
+    try:
+        sacBradshawShelter(dog_entry)
+    except:
+        logging.exception('')
+        pass
+    normalizeInput(dog_entry)
     print json.dumps(dog_entry)
+
+#currently only accounts for dog image URLs
+def normalizeInput(dog_entry):
+    for dog in dog_entry:
+        dog["doggo"] = dog["doggo"].replace('https://', '')
 
 def handleDate(unformatted_date):
     dt = parse(unformatted_date)
@@ -22,7 +54,7 @@ def handleDate(unformatted_date):
     return date
 
 def placerSpca(dog_entry):
-    placer_dogs = 'http://placerspca.org/adopt-home/dogs/#RosevilleDogs'
+    placer_dogs = 'https://placerspca.org/adopt-home/dogs/#RosevilleDogs'
 
     page = requests.get(placer_dogs)
 
@@ -42,7 +74,7 @@ def placerSpca(dog_entry):
         #print dog_block
         if (dog_block.find('a')) is None:
             continue
-        dog_specific_url = "http://ws.petango.com/webservices/adoptablesearch/" + (dog_block.find('a')).get('href')
+        dog_specific_url = "https://ws.petango.com/webservices/adoptablesearch/" + (dog_block.find('a')).get('href')
         dog_specific_page = requests.get(dog_specific_url)
         dog_specific_soup = BeautifulSoup(dog_specific_page.text, 'html.parser')
         dog_image = dog_specific_soup.find('img', attrs = {'id': 'imgAnimalPhoto'})
@@ -178,7 +210,7 @@ def sacSPCA(dog_entry):
 def sacShelter(dog_entry):
     #http://www.cityofsacramento.org/Community-Development/Animal-Care/Adoptions
 
-    shelter_dogs = 'http://petharbor.com/results.asp?searchtype=ADOPT&start=4&nopod=1&grid=1&friends=0&samaritans=1&nosuccess=1&orderby=Intake%20Date&rows=96&imght=120&imgres=detail&tWidth=400&view=sysadm.v_scrm_adopt_shelter&nobreedreq=1&nocustom=1&bgcolor=192845&text=ffffff&link=ffffff&alink=ffffff&vlink=ffffff&fontface=arial&fontsize=13&col_bg=4994d0&miles=20&shelterlist=%27scrm%27&atype=&where=type_DOG&PAGE=1'
+    shelter_dogs = 'https://petharbor.com/results.asp?searchtype=ADOPT&start=4&nopod=1&grid=1&friends=0&samaritans=1&nosuccess=1&orderby=Intake%20Date&rows=96&imght=120&imgres=detail&tWidth=400&view=sysadm.v_scrm_adopt_shelter&nobreedreq=1&nocustom=1&bgcolor=192845&text=ffffff&link=ffffff&alink=ffffff&vlink=ffffff&fontface=arial&fontsize=13&col_bg=4994d0&miles=20&shelterlist=%27scrm%27&atype=&where=type_DOG&PAGE=1'
 
     page = requests.get(shelter_dogs)
     soup = BeautifulSoup(page.text, 'html.parser')
@@ -189,7 +221,8 @@ def sacShelter(dog_entry):
         dog_link = 'https://petharbor.com/' + (dog_grid.find('a')).get('href')
         #print dog_page
         dog_page = requests.get(dog_link)
-        dog_soup = BeautifulSoup(dog_page.text, 'html.parser')
+        # ** had to change parser to correctly parse invalid html '<b><u>NOT</b></u>' **
+        dog_soup = BeautifulSoup(dog_page.text, 'html5lib')  
         #print dog_soup
         dog_table = dog_soup.find('table', {'class' : 'DetailTable'})
         dog_img = 'petharbor.com/' + (dog_table.find('img')).attrs['src']
@@ -212,15 +245,18 @@ def sacShelter(dog_entry):
             dog_age = 'Unknown'
         table_log["age"] = dog_age
         #print table_log['age']
-        dog_intake = handleDate((re.findall(r"\w+\s\d{1,2},\s\d{4}",dog_info))[0])
-        #print intake_date
+        try:
+            dog_intake = handleDate((re.findall(r"\w+\s\d{1,2},\s\d{4}",dog_info))[0])
+        except:
+            dog_intake = "NA"
+        #print dog_intake
         table_log["intake"] = dog_intake
         table_log["dogLink"] = dog_link
         table_log["shelter"] = "Sacramento Front Street Animal Shelter"
         dog_entry.append(table_log)
 
 def yoloSPCA(dog_entry):
-    yoloSPCA = "http://yolospca.org/adopt/view-adoptable-animals"
+    yoloSPCA = "https://yolospca.org/adopt/view-adoptable-animals"
 
     page = requests.get(yoloSPCA)
     soup = BeautifulSoup(page.text, 'html.parser')
@@ -258,7 +294,7 @@ def yoloSPCA(dog_entry):
         dog_entry.append(table_log)
 
 def sacBradshawShelter(dog_entry):
-    bradshawShelter = "http://www.acr.saccounty.net/Adoption/Pages/ViewAllAdoptableAnimals.aspx"
+    bradshawShelter = "https://animalcare.saccounty.net/Adoption/Pages/ViewAllAdoptableAnimals.aspx"
 
     page = requests.get(bradshawShelter)
     soup = BeautifulSoup(page.text, 'html.parser')

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "export HTTPS=true && node ./bin/www"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -12,6 +12,11 @@
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
     "material-table": "^1.38.0",
-    "morgan": "~1.9.1"
+    "morgan": "~1.9.1",
+    "python-shell": "^1.0.8",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-https-redirect": "^1.1.0",
+    "sqlite3": "^4.1.1"
   }
 }

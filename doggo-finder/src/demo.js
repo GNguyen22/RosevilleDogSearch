@@ -44,9 +44,16 @@ const styles = theme => ({
       width: '100%',
       marginTop: theme.spacing(3),
       overflowX: 'auto',
+      fontSize: '2rem',
+      color: "red",
+      backgroundColor: "red",
    },
    table: {
       minWidth: 700,
+      backgroundColor: "green",
+   },
+   body: {
+      backgroundColor: "blue",
    },
 });
 
@@ -58,14 +65,14 @@ class Demo extends Component {
       fetch('/retrieve-doggo-data')
          .then(res => {
             if(res.ok) {
-               console.log(res)
+               //console.log(res)
                return res.json();
             } else {
                throw new Error('Something went wrong...');
             }
          })
          .then(data => {
-            console.log(data)
+            //console.log(data)
             this.setState({
                doggos:data,
                isLoading: false,
@@ -73,7 +80,8 @@ class Demo extends Component {
          .catch(error=> this.setState({ error, isLoading:false }));
    }
 
-   render() {
+   render(props) {
+      //console.log("rendering");
       const { classes } = this.props;
 
       if (this.state) {
@@ -97,9 +105,10 @@ class Demo extends Component {
       return (
          //<div style={{ maxWidth: "100%" }}>
          <MaterialTable
+         className={classes.root}
          columns={[
             { title: "Dog", field: "doggo", sorting: false,
-              render: rowData => <img src={'http://' + rowData.doggo} height="300" alt=""/>,
+              render: rowData => <img src={'https://' + rowData.doggo} height="300" alt=""/>,
               cellStyle: {borderRight: borderCss, borderTop: borderCss, borderBottom: borderCss},
             },
             { title: "Name", field: "name", cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss} },
@@ -120,7 +129,9 @@ class Demo extends Component {
             { title: "Intake Date", field: "intake", cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss, width: 75}
             },
             { title: "Dog Link", field: "dogLink", sorting: false,
-              render: rowData => <Text style={styles.TextStyle} onPress={ ()=> Linking.openURL(rowData.dogLink) } > Dog Page Link </Text>,
+              //render: rowData => <Text style={styles.TextStyle} onPress={ ()=> Linking.openURL(rowData.dogLink) } > Dog Page Link </Text>,
+              // cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss},
+              render: rowData => <a href={rowData.dogLink}><Text style={styles.TextStyle} onPress={ ()=> Linking.openURL(rowData.dogLink) } >Dog Page Link</Text></a>,
                cellStyle: {border: borderCss, borderTop: borderCss, borderBottom: borderCss},
             },
             { title: "Shelter", field: "shelter", cellStyle: {borderLeft: borderCss, borderTop: borderCss, borderBottom: borderCss}}
@@ -133,12 +144,12 @@ class Demo extends Component {
             headerStyle: {
                backgroundColor: '#01579b',
                color: '#FFF'
-            }
+            },
+	    pageSize: 10
          }}
          icons={tableIcons}
          title="Roseville Dog Adoption Search"
          style={{ width: '95%', marginLeft: '2.5%'}}
-         className={classes.root}
          />
          //</div>
       );
