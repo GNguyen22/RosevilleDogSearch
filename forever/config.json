@@ -1,0 +1,25 @@
+[
+  {
+    // Express
+    "uid": "express",
+    "append": true,
+    "watch": true,
+    "script": "bin/www",
+    "sourceDir": "/home/ec2-user/react-backend-with-react",
+    "logFile": "/home/ec2-user/react-backend-with-react/logs/express-forever.log",
+    "outFile": "/home/ec2-user/react-backend-with-react/logs/express-out.log",
+    "errFile": "/home/ec2-user/react-backend-with-react/logs/express-error.log"
+  },
+  {
+    // React
+    "uid": "react",
+    "append": true,
+    "watch": true,
+    "script": ".",
+    "command": "npm start",
+    "sourceDir": "/home/ec2-user/react-backend-with-react/doggo-finder",
+    "logFile": "/home/ec2-user/react-backend-with-react/logs/react-forever.log",
+    "outFile": "/home/ec2-user/react-backend-with-react/logs/react-out.log",
+    "errFile": "/home/ec2-user/react-backend-with-react/logs/react-error.log"
+  }
+]
